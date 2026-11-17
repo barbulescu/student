@@ -1,0 +1,28 @@
+# Minimal pipeline: build and test every push and merge request.
+# If your GitLab has no internet access, replace the image with the one
+# from your internal registry (e.g. registry.company.local/maven:3.9-eclipse-temurin-21).
+
+image: maven:3.9-eclipse-temurin-21
+
+variables:
+  # Keep the Maven repository inside the project dir so GitLab can cache it
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --show-version"
+
+cache:
+  key: maven
+  paths:
+    - .m2/repository
+
+stages:
+  - test
+
+test:
+  stage: test
+  script:
+    - mvn $MAVEN_CLI_OPTS verify
+  artifacts:
+    when: always
+    reports:
+      # Shows test results directly in the merge request
+      junit: target/surefire-reports/TEST-*.xml
